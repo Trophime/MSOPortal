@@ -760,6 +760,13 @@ class WorkflowExecution(models.Model):
                         message += "\n" + \
                             cause['type'] + ": " + cause["message"]
                         message += "\n\t" + cause["traceback"]
+            elif event_type == "cloudify_log":
+                message = event["reported_timestamp"]
+                message += " " + event["message"]
+                if event["error_causes"]:
+                    for cause in event["error_causes"]:
+                        message += "\n" + \
+                            cause['type'] + ": " + cause["message"]
             else:
                 message = json.dumps(event)
             response.append(message)
