@@ -297,8 +297,8 @@ function renderApplicationInputs(selector_id, container_id) {
     var dataset_pattern = new RegExp("^mso4sc_dataset_(.)*$");
     var email_pattern = new RegExp("^email_u(.)*$");
 
-    var outputdataset_pattern = new RegExp('^mso4sc_outdataset_(.)*$')
-    var datacatalogue_pattern = new RegExp('^mso4sc_datacatalogue_(.)*$')
+    var outputdataset_pattern = new RegExp('^mso4sc_outdataset_(.)*$');
+    var datacatalogue_pattern = new RegExp('^mso4sc_datacatalogue_(.)*$');
 
     if (parseInt(application) >= 0) {
         $.ajax({
@@ -337,8 +337,10 @@ function renderApplicationInputs(selector_id, container_id) {
                                 )
                             );
                         }
-                        //First render HPCs inputs
-                        else if (hpc_pattern.test(input.name)) {
+                    });
+                    //First render HPCs inputs
+                    $(data.inputs).each(function (index, input) {
+                        if (hpc_pattern.test(input.name)) {
                             inputs_container.append( //hpcs
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -360,7 +362,10 @@ function renderApplicationInputs(selector_id, container_id) {
                             );
                             renderHPCData("#input_container_"+input.name);
                         }
-                        else if (dataset_pattern.test(input.name)) {
+                    });
+                    //Then render data inputs
+                    $(data.inputs).each(function (index, input) {
+                        if (dataset_pattern.test(input.name)) {
                             inputs_container.append( //datasets
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -382,13 +387,16 @@ function renderApplicationInputs(selector_id, container_id) {
                                 )
                             );
                             renderDatasetsData("#input_container_"+input.name);
-                            $("#input_container_"+input.name).find("select").on('change', function () {
+                            $("#input_container_"+input.name).find("select").on('change', function () {email_pattern.test(input.name)
                                 renderDatasetChoices("#input_container_"+input.name,
                                                      "#choices_" + input.name,
                                                      "resource_" + input.name);
                             });
                         }
-                        else if (outputdataset_pattern.test(input.name)) {
+                    });
+                    //Then output dataset
+                    $(data.inputs).each(function (index, input) {
+                        if (outputdataset_pattern.test(input.name)) {
                             inputs_container.append( //datasets
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -408,7 +416,10 @@ function renderApplicationInputs(selector_id, container_id) {
                             );
                             renderDatasetsData("#input_container_"+input.name);
                         }
-                        else if (datacatalogue_pattern.test(input.name)) {
+                    });
+                    //Then output dataset
+                    $(data.inputs).each(function (index, input) {
+                        if (datacatalogue_pattern.test(input.name)) {
                             inputs_container.append( //datasets
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -423,7 +434,10 @@ function renderApplicationInputs(selector_id, container_id) {
                                 )
                             );
                         }
-                        else if (!(hpc_pattern.test(input.name)) && !(dataset_pattern.test(input.name)) && ! (email_pattern.test(input.name)) ) {
+                    });
+                    //Then output dataset
+                    $(data.inputs).each(function (index, input) {
+                        if ( !(hpc_pattern.test(input.name)) && !(dataset_pattern.test(input.name)) && !(datacatalogue_pattern.test(input.name)) && !(outputdataset_pattern.test(input.name)) && !(email_pattern.test(input.name)) ) {
                             inputs_container.append( //other
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
