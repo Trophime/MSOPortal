@@ -182,7 +182,8 @@ function openExperimentsTool(evt, toolName) {
             renderApplicationData("#remove_application_selector", only_owned=true);
             break;
         case "settings":
-            renderHPCData("#infrastructure_list", select=false);
+            renderKeyData("#ckan_key_form");
+	    renderHPCData("#infrastructure_list", select=false);
             renderTunnelData("#add_hpc_tunnel");
             renderTunnelData("#tunnel_list", select=false);
             break;
@@ -301,7 +302,6 @@ function renderApplicationInputs(selector_id, container_id) {
     var hpc_pattern = new RegExp("^mso4sc_hpc_(.)*$");
     var dataset_pattern = new RegExp("^mso4sc_dataset_(.)*$");
     var email_pattern = new RegExp("^email_u(.)*$");
-
     var outputdataset_pattern = new RegExp('^mso4sc_outdataset_(.)*$');
     var datacatalogue_pattern = new RegExp('^mso4sc_datacatalogue_(.)*$');
 
@@ -331,19 +331,6 @@ function renderApplicationInputs(selector_id, container_id) {
                          return 1;
                         return 0; //default return value (no sorting)
                     });
-                    // email
-                    $(data.inputs).each(function (index, input) {
-                        if (email_pattern.test(input.name)) {
-                            inputs_container.append( //other
-                                $(document.createElement('div')).attr({
-                                    id: "input_container_" + input.name
-                                }).append(
-                                    inputToForm(input)
-                                )
-                            );
-                        }
-                    });
-                    //First render HPCs inputs
                     $(data.inputs).each(function (index, input) {
                         if (hpc_pattern.test(input.name)) {
                             inputs_container.append( //hpcs
@@ -367,10 +354,7 @@ function renderApplicationInputs(selector_id, container_id) {
                             );
                             renderHPCData("#input_container_"+input.name);
                         }
-                    });
-                    //Then render data inputs
-                    $(data.inputs).each(function (index, input) {
-                        if (dataset_pattern.test(input.name)) {
+                        else if (dataset_pattern.test(input.name)) {
                             inputs_container.append( //datasets
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -392,16 +376,13 @@ function renderApplicationInputs(selector_id, container_id) {
                                 )
                             );
                             renderDatasetsData("#input_container_"+input.name);
-                            $("#input_container_"+input.name).find("select").on('change', function () {email_pattern.test(input.name)
+                            $("#input_container_"+input.name).find("select").on('change', function () {
                                 renderDatasetChoices("#input_container_"+input.name,
                                                      "#choices_" + input.name,
                                                      "resource_" + input.name);
                             });
                         }
-                    });
-                    //Then output dataset
-                    $(data.inputs).each(function (index, input) {
-                        if (outputdataset_pattern.test(input.name)) {
+                        else if (outputdataset_pattern.test(input.name)) {
                             inputs_container.append( //datasets
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -421,10 +402,7 @@ function renderApplicationInputs(selector_id, container_id) {
                             );
                             renderDatasetsData("#input_container_"+input.name);
                         }
-                    });
-                    //Then output dataset
-                    $(data.inputs).each(function (index, input) {
-                        if (datacatalogue_pattern.test(input.name)) {
+                        else if (datacatalogue_pattern.test(input.name)) {
                             inputs_container.append( //datasets
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -439,10 +417,7 @@ function renderApplicationInputs(selector_id, container_id) {
                                 )
                             );
                         }
-                    });
-                    //Then output dataset
-                    $(data.inputs).each(function (index, input) {
-                        if ( !(hpc_pattern.test(input.name)) && !(dataset_pattern.test(input.name)) && !(datacatalogue_pattern.test(input.name)) && !(outputdataset_pattern.test(input.name)) && !(email_pattern.test(input.name)) ) {
+                        else if (!(hpc_pattern.test(input.name)) && !(dataset_pattern.test(input.name))) {
                             inputs_container.append( //other
                                 $(document.createElement('div')).attr({
                                     id: "input_container_" + input.name
@@ -803,7 +778,7 @@ function renderHPCData(container_id, select=true, clear_notifications=true) {
                                     attr("class", "margin hpc_settings_block").
                                     append(
                                         $(document.createElement('div')).
-                                            attr("class", "s-12 m-6 l-6").
+                                            attr("class", "s-12 m-6 l-8").
                                             append(
                                                 $(document.createElement('div')).
                                                     attr("class", "l-9 left").
@@ -920,18 +895,23 @@ function renderDatasetsData(selector_id) {
             $.ajaxSettings.beforeSend(xhr, settings);
             $(".loader").show();
         },
-        success: function (datasets) {
+        success: function (data) {
             $(".loader").hide();
-            dataset_selector.empty();
-            dataset_selector.append(
-                $(document.createElement('option')).attr("value", "-1").text("None")
-            );
-            if (datasets.length > 0) {
-                $.each(datasets, function (index, dataset) {
-                    dataset_selector.append(
-                        $(document.createElement('option')).attr("value", index).text(dataset)
-                    )
-                });
+            if (data.error!==undefined && data.error!==null) {
+                appendNotification("Couldn't get datasets: "+data.error, error=true);
+            } else {
+                datasets = data.names;
+                dataset_selector.empty();
+                dataset_selector.append(
+                    $(document.createElement('option')).attr("value", "-1").text("None")
+                );
+                if (datasets.length > 0) {
+                    $.each(datasets, function (index, dataset) {
+                        dataset_selector.append(
+                            $(document.createElement('option')).attr("value", index).text(dataset)
+                        )
+                    });
+                }
             }
         },
         error: function (jqXHR, status, errorThrown) {
@@ -1176,7 +1156,8 @@ function renderLogData(exec_id, log_id, reset=false) {
                     }
                 } else {
                     var light = $(log_id+"_light");
-                    if (data.events.status=="terminated") {
+	            console.log(data.events);
+	            if (data.events.status=="terminated") {
                         light.attr("src", "/static/experimentstool/img/light_green.png");
                     } else {
                         light.attr("src", "/static/experimentstool/img/light_red.png");
