@@ -32,6 +32,12 @@ def experimentstool(request):
     return render(request, 'experimentstool.html', context)
 
 
+# @login_required
+# def get_email_key(request):
+#     return JsonResponse(
+#         EmailKey.get(request.user, return_dict=True),
+#         safe=False)
+
 @login_required
 def get_ckan_key(request):
     return JsonResponse(

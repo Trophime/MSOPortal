@@ -1,5 +1,17 @@
 <form class="customform">
     {% csrf_token %}
+    <h2>Email:</h2>
+    <div class="1-12" id="ckan_key_form">
+        <div>
+            <label for="ckan_key">Email:</label>
+            <input type='text' maxlength="50" id="ckan_key" />
+        </div>
+        <div class="l-1 left">
+            <button>Update</button>
+        </div> 
+    </div>
+    <hr>
+    <hr>
     <h2>Data Catalogue key:</h2>
     <div class="1-12" id="ckan_key_form">
         <div>
@@ -107,4 +119,17 @@
             </div>    
         </div>
     </div>
+    <h2>Sregistry:</h2>
+    <div class="1-12" id="ckan_key_form">
+        <div>
+            <label for="ckan_key">Sregistry:</label>
+            <input type='text' maxlength="50" id="ckan_key" />
+        </div>
+        <div class="l-1 left">
+            <button>Update</button>
+        </div> 
+    </div>
+    <hr>
+    <hr>
+
 </form>

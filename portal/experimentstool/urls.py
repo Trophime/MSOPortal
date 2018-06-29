@@ -48,4 +48,6 @@ urlpatterns = [
         views.get_ckan_key, name="_get_ckan_key"),
     url(r'^_update_ckan_key$',
         views.update_ckan_key, name="_update_ckan_key"),
+    # url(r'^_get_email_key$',
+    #     views.get_email_key, name="_get_email_key"),
 ]
