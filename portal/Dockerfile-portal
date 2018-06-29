@@ -1,34 +1,45 @@
 From ubuntu:xenial
 
-# Mount ../../../portal as $HOME/portal
+ARG DEBUG=True
+ARG TERM=linux
+ARG DEBIAN_FRONTEND=noninteractive
 
+LABEL maintainer="javier.carnero@atos.net"
+
+# Setup environment variables
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# at the beginning
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+# Add python3-paramiko python3-decouple python3-django-allauth python3-yaml??
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y install ntp dos2unix && \
     apt-get -y install python3 python3-pip && \
+    apt-get clean -y && \
     pip3 install --upgrade pip==10.0.1
 
 
 # install
-RUN ls -l
 COPY requirements.txt /tmp
-RUN pip3 install -r /tmp/requirements.txt
-
-# hack cloudify to support python3
-RUN sed -i 's/import urlparse/#import urlparse/g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/*.py && \
-    sed -i 's/urlparse\./urllib.parse./g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/*.py && \
-    sed -i 's/urllib\.quote/urllib.parse.quote/g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/*.py && \
-    sed -i 's/import urlparse/#import urlparse/g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/aria/*.py && \
-    sed -i 's/urlparse\./urllib.parse./g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/aria/*.py && \
-    sed -i 's/urllib\.quote/urllib.parse.quote/g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/aria/*.py && \
-    sed -i 's/urlsafe_b64encode(credentials)/urlsafe_b64encode(credentials.encode("utf-8"))/g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/client.py && \
-    sed -i 's/+ encoded_credentials/+ str(encoded_credentials, "utf-8")/g' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/client.py && \
-    sed -i '/self.response = response/a\        self.message = message' /usr/local/lib/python3.5/dist-packages/cloudify_rest_client/exceptions.py
-
-# python3-paramiko python3-decouple python3-django-allauth python3-yaml
-EXPOSE 8000
+RUN pip3 install -r /tmp/requirements.txt && \
+    rm -f /tmp/requirements.txt && \
+    mkdir -p /home/portal /home/nginx
 
 WORKDIR /home/portal
-RUN ls -l && echo "To start the portal run: sh ./up-dev.sh"
 
-CMD ["bash"]
+COPY nginx.conf /home/nginx
+COPY setup-production.sh /tmp
+RUN sh /tmp/setup-production.sh -d $DEBUG -n /home/nginx && \
+    rm -f /tmp/setup-production.sh && \
+
+EXPOSE 8000
+
+
+# at the end
+RUN echo 'debconf debconf/frontend select Dialog' | sudo debconf-set-selections
+
+CMD ["/home/portal/start.sh","$DEBUG"]
